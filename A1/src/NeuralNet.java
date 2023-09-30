@@ -18,8 +18,9 @@ public class NeuralNet implements NeuralNetInterface{
     private double error_threshold = 0.05;
     private int epochs = 0;
     private List<Double> error_logs;
+    private String file_name;
 
-    public NeuralNet(int input_size, int num_hiddens, int output_size, int num_layers, double learning_rate, double momentum, int a, int b, String activation_func, int epochs) {
+    public NeuralNet(int input_size, int num_hiddens, int output_size, int num_layers, double learning_rate, double momentum, int a, int b, String activation_func, int epochs, String file_name) {
         this.input_size = input_size;
         this.num_hiddens = num_hiddens;
         this.output_size = output_size;
@@ -36,6 +37,7 @@ public class NeuralNet implements NeuralNetInterface{
         this.activation_func = activation_func;
         this.epochs = epochs;
         error_logs = new ArrayList<Double>();
+        this.file_name = file_name;
         //epoch = 0;
     }
 
@@ -154,6 +156,21 @@ public class NeuralNet implements NeuralNetInterface{
     @Override
     public void load(String argFileName) throws IOException{
 
+    }
+
+    public void write_file(){
+        String[][] content = new String[error_logs.size()][2];
+        System.out.println("the written csv is " + error_logs.size() + "long.");
+        for (int i = 0; i < error_logs.size(); i++){
+            content[i][0] = String.valueOf(i);
+            content[i][1] = String.valueOf(error_logs.get(i));
+        }
+        try {
+            writeCSV.write(content, file_name);
+        }
+        catch (Exception e){
+            System.out.println("Write file error");
+        }
     }
 
 }
