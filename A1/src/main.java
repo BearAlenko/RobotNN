@@ -2,8 +2,8 @@ public class main{
     public static boolean save_file = true;
     public static int trails = 1;
     public static int epochs = 10000;
-    //public static NeuralNet nn;
-    public static void main(String args[]){
+
+    private void nn(){
         int input_size = 2;
         int num_hiddens = 4;
         int output_size = 1;
@@ -57,5 +57,14 @@ public class main{
         System.out.println("Average epoch number using bipolar function with momentum: " + total_epochs_bM/trails);
 
         //Training and evaluation..................
+    }
+    //public static NeuralNet nn;
+    public static void main(String args[]){
+        LookUpTable lut = new LookUpTable();
+        //myRobot robot = new myRobot();
+        //for(int i = 0; i < 100; i++) {
+         //   System.out.println(lut.get_random_action());
+        //}
+        System.out.println(lut.get_max_action());
     }
 }

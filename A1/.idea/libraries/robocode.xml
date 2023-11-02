@@ -1,0 +1,28 @@
+<component name="libraryTable">
+  <library name="robocode">
+    <CLASSES>
+      <root url="jar://C:/robocode/libs/annotations-13.0.jar!/" />
+      <root url="jar://C:/robocode/libs/bcel-6.7.0.jar!/" />
+      <root url="jar://C:/robocode/libs/codesize-1.2.jar!/" />
+      <root url="jar://C:/robocode/libs/commons-lang3-3.12.0.jar!/" />
+      <root url="jar://C:/robocode/libs/kotlin-stdlib-1.8.10.jar!/" />
+      <root url="jar://C:/robocode/libs/picocontainer-2.15.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.battle-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.core-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.host-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.repository-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.sound-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.ui-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/robocode.ui.editor-1.9.5.1.jar!/" />
+      <root url="jar://C:/robocode/libs/roborumble.jar!/" />
+      <root url="jar://C:/robocode/libs/org.osgi.service.prefs-1.1.2.jar!/" />
+      <root url="jar://C:/robocode/libs/osgi.annotation-8.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/robocode/libs/org.osgi.service.prefs-1.1.2.jar!/OSGI-OPT/src" />
+      <root url="jar://C:/robocode/libs/osgi.annotation-8.0.1.jar!/OSGI-OPT/src" />
+    </SOURCES>
+  </library>
+</component>
