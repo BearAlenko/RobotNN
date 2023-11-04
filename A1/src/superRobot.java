@@ -5,6 +5,7 @@ import robocode.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +20,9 @@ public class superRobot extends AdvancedRobot {
     public final static int replay_size = 100;
     // replay memory
     public static ReplayMemory<StateActionInput> replay_memory = new ReplayMemory<StateActionInput>(replay_size);
+
+    // warm up rounds to add initial replay memory for training later and see how the agent performs without learning
+    private int warm_up_rounds = 100;
 
     // State-action pairs of previous and current
     private State pre_state = new State();
@@ -65,7 +69,8 @@ public class superRobot extends AdvancedRobot {
     private static int dataset_size = 20;
     private static int output_size = 1;
     private static int epochs = 20;
-    private static double nn_lr = 0.6;
+    private static double init_nn_lr = 0.6;
+    private static double nn_lr = init_nn_lr;
     private static double nn_momentum = 0.9;
     private static String activation_func = "bipolar";
     public static NeuralNet nn = new NeuralNet(input_size, num_neurons,
@@ -75,15 +80,11 @@ public class superRobot extends AdvancedRobot {
     // warm the agent for the number of dataset_size updating unless it has no enough training data
 
     // Statistics parameters
-    private static int test_rounds = 50;
+    private static int test_rounds = 100;
     private static int games_per_test = 100;
     private static double[] win_rate = new double[test_rounds];
     private static double[] total_rewards = new double[test_rounds*games_per_test];
-    private static int[] win_loss_table = new int[test_rounds*games_per_test];
-    private static double[] avg_error = new double[test_rounds];
-    private double accum_error = 0.0;
-
-    private static writeCSV writing = new writeCSV(test_rounds);
+    private static double[] error_log = new double[test_rounds];
     //private boolean new_battle = true;
 
 
@@ -225,23 +226,34 @@ public class superRobot extends AdvancedRobot {
 
     @Override
     public void onBattleEnded(BattleEndedEvent e){
-        // calculate win_rate over certain period
-        for (int i = 0; i < test_rounds; i++){
+        // calculate stats over certain period
+        for (int i = 0; i < test_rounds; i++){ // get mean value
             win_rate[i] = win_rate[i]/games_per_test;
+            error_log[i] = error_log[i] / games_per_test;
         }
         // save win_rate to csv
         System.out.println(Arrays.toString(win_rate));
         System.out.println(Double.toString(random_rate));
         String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date());
-        File newfile = getDataFile("win_rate_onpolicy_"+ String.valueOf(on_off_policy) +"_terminalOnly_" +
-                String.valueOf(terminal_only) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
-        File total_rewards_w = getDataFile("total_rewards.csv");
-        writing.writeToFile(newfile, win_rate);
-        writing.writeToFile(total_rewards_w, total_rewards);
-        System.out.println("files saved to " + newfile.getAbsolutePath());
+        File win_file = getDataFile("win_rate_nnlr_"+ String.valueOf(init_nn_lr) +"_gamma_" +
+                String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
+        //File total_rewards_w = getDataFile("total_rewards.csv");
+        File error_file = getDataFile("error_nnlr_"+ String.valueOf(init_nn_lr) +"_gamma_" +
+                String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
+        try {
+            writeCSV.save_data(win_file, win_rate);
+            writeCSV.save_data(error_file, error_log);
+            //writeCSV.save_data(total_rewards_w, total_rewards);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        System.out.println("files saved to " + win_file.getAbsolutePath());
+        System.out.println("files saved to " + error_file.getAbsolutePath());
 
         //to do: save weights
     }
+
+
 
     // calculate the new state when scanned the enemy
     private void cal_state(ScannedRobotEvent e){
@@ -321,19 +333,27 @@ public class superRobot extends AdvancedRobot {
     public void update_value(double reward){
         double cur_value = 0.0;
         double local_learning_rate = learning_rate;
-        if (on_off_policy){ // if on policy
-            cur_value = nn.infer(cur_state.getStateValue(), Action.get_bipolar_value(cur_action));
-            double on_value = pre_value + learning_rate * (reward + gamma * cur_value - pre_value);
-            replay_memory.add(new StateActionInput(pre_state, pre_action, on_value));
-        } // else off policy
+        double error = 0.0; // the error for error log
+        // set warm_up to add initial data into replay_memory before training the network.
+        if (getRoundNum() < warm_up_rounds) replay_memory.add(new StateActionInput(pre_state, pre_action, pre_value));
         else {
-            int max_actindex = get_max_action(cur_state);
-            cur_value = nn.infer(cur_state.getStateValue(), Action.get_bipolar_value(Action.get_action(max_actindex)));
-            double off_value = pre_value + learning_rate * (reward + gamma * cur_value - pre_value);
-            replay_memory.add(new StateActionInput(pre_state, pre_action, off_value));
+            if (on_off_policy) { // if on policy
+                cur_value = nn.infer(cur_state.getStateValue(), Action.get_bipolar_value(cur_action));
+                error = learning_rate * (reward + gamma * cur_value - pre_value);
+                double on_value = pre_value + learning_rate * (reward + gamma * cur_value - pre_value);
+                replay_memory.add(new StateActionInput(pre_state, pre_action, on_value));
+            } // else off policy
+            else {
+                int max_actindex = get_max_action(cur_state);
+                cur_value = nn.infer(cur_state.getStateValue(), Action.get_bipolar_value(Action.get_action(max_actindex)));
+                error = learning_rate * (reward + gamma * cur_value - pre_value);
+                double off_value = pre_value + learning_rate * (reward + gamma * cur_value - pre_value);
+                replay_memory.add(new StateActionInput(pre_state, pre_action, off_value));
+            }
+            pre_value = cur_value;
+            train_nn();
         }
-        pre_value = cur_value;
-        train_nn();
+        error_log[getRoundNum()/games_per_test] += Math.abs(error);
     }
 
     /*private int get_max_index_fromvalues(double[] values){

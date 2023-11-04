@@ -1,8 +1,11 @@
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Date;
+
 import robocode.RobocodeFileOutputStream;
 import robocode.RobocodeFileWriter;
 
@@ -15,18 +18,15 @@ public class writeCSV {
         win_rate = new double[test_num];
     }
 
-    public void writeToFile(File fileToWrite, double[] table) {
-        try{
-            RobocodeFileWriter fileWriter = new RobocodeFileWriter(fileToWrite.getAbsolutePath(), true);
-            for (double data: table) {
-                fileWriter.write(" " + Double.toString(data) + "\r\n");
-            }
-            fileWriter.close();
+    public static void save_data(File file_name, double[] data) throws IOException {
+        RobocodeFileOutputStream rfos= new RobocodeFileOutputStream(file_name);
+        PrintStream out_stream = new PrintStream(rfos);
+        for (double s_data: data) {
+            out_stream.format(Double.toString(s_data) + "\n");
         }
-        catch(Exception e){
-            System.out.println(e);
-        }
+        out_stream.close();
     }
+
     public static void write(String[][] content, String out_name) throws IOException {
 
         File csvFile = new File(out_name += ".csv");

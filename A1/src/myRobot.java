@@ -52,7 +52,7 @@ public class myRobot extends AdvancedRobot {
     private double enemy_bearing = 0;
 
     // Statistics parameters
-    private static int test_rounds = 100;
+    private static int test_rounds = 10;
     private static int games_per_test = 100;
     private static double[] win_rate = new double[test_rounds];
     private static int[] win_loss_table = new int[test_rounds*games_per_test];
@@ -216,9 +216,13 @@ public class myRobot extends AdvancedRobot {
         String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date());
         File newfile = getDataFile("win_rate_onpolicy_"+ String.valueOf(on_off_policy) +"_terminalOnly_" +
                 String.valueOf(terminal_only) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
-        writing.writeToFile(newfile, win_rate);
         File total_rewards_w = getDataFile("total_rewards.csv");
-        writing.writeToFile(total_rewards_w, total_rewards);
+        try {
+            writeCSV.save_data(newfile, win_rate);
+            writeCSV.save_data(total_rewards_w, total_rewards);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
         System.out.println("files saved to " + newfile.getAbsolutePath());
 
         //lut.save(getDataFile("lut_for_nn.txt")); // save lut
