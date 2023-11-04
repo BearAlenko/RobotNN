@@ -19,6 +19,7 @@ public class NeuralNet implements NeuralNetInterface{
     private int epochs = 0;
     private List<Double> error_logs;
     private String file_name;
+    private List<Double> RMSE_logs;
 
     public NeuralNet(int input_size, int num_hiddens, int output_size, int num_layers, double learning_rate, double momentum, int a, int b, String activation_func, int epochs, String file_name) {
         this.input_size = input_size;
@@ -37,6 +38,7 @@ public class NeuralNet implements NeuralNetInterface{
         this.activation_func = activation_func;
         this.epochs = epochs;
         error_logs = new ArrayList<Double>();
+        RMSE_logs = new ArrayList<Double>();
         this.file_name = file_name;
         //epoch = 0;
     }
@@ -86,6 +88,7 @@ public class NeuralNet implements NeuralNetInterface{
         double[] d_error = new double[output_size];
         for (int e = 0; e < epochs; e++){
             //reset loss value
+            //System.out.println(String.valueOf(e));
             total_error = 0.0;
             for (int i = 0; i < len_dataset; i++){
                 forward(inputs[i]);
@@ -99,9 +102,10 @@ public class NeuralNet implements NeuralNetInterface{
             total_error /= 2;
             //System.out.println("loss at epoch " + e + "is: " + total_error);
             error_logs.add(total_error);
-            if (total_error < error_threshold){
+            RMSE_logs.add(Math.sqrt(total_error/len_dataset));
+            /*if (total_error < error_threshold){
                 return e;
-            }
+            }*/
         }
         return epochs;
     }
@@ -145,9 +149,24 @@ public class NeuralNet implements NeuralNetInterface{
     public double train(double [] X, double argValue){
         return 0.0;
     }
+
+
+    // Only one output
     @Override
-    public double outputFor(double [] X){
-        return 0.0;
+    public double outputFor(double[] X){return 0.0;}
+
+    public double infer(double [] state_values, double action_values){
+        double[] input = new double[State.state_length + 1];
+        for (int i = 0; i < State.state_length; i++){
+            input[i] = state_values[i];
+        }
+        input[State.state_length] = action_values;
+        double[] output = input;
+        for (int i = 0; i < num_layers; i++){
+            layers[i].forward(output);
+            output = layers[i].outputs;
+        }
+        return output[0];
     }
     @Override
     public void save(File argFile){
@@ -167,6 +186,23 @@ public class NeuralNet implements NeuralNetInterface{
         }
         try {
             writeCSV.write(content, file_name);
+        }
+        catch (Exception e){
+            System.out.println("Write file error");
+        }
+    }
+
+    public void write_RMSE_file(String path){
+        String[][] content = new String[RMSE_logs.size()][2];
+        System.out.println("the written csv is " + RMSE_logs.size() + "long.");
+        String new_filename = path+"RMSE_lr="+String.valueOf(learning_rate)+"_mom="
+                +String.valueOf(momentum)+"_neu="+String.valueOf(num_hiddens) +".csv";
+        for (int i = 0; i < RMSE_logs.size(); i++){
+            content[i][0] = String.valueOf(i);
+            content[i][1] = String.valueOf(RMSE_logs.get(i));
+        }
+        try {
+            writeCSV.write(content, new_filename);
         }
         catch (Exception e){
             System.out.println("Write file error");

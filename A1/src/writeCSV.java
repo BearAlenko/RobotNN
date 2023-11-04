@@ -1,11 +1,32 @@
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import robocode.RobocodeFileOutputStream;
+import robocode.RobocodeFileWriter;
 
 /**
  * Created by 37919 on 2023/9/30.
  */
 public class writeCSV {
+    double[] win_rate;
+    public writeCSV(int test_num){
+        win_rate = new double[test_num];
+    }
+
+    public void writeToFile(File fileToWrite, double[] table) {
+        try{
+            RobocodeFileWriter fileWriter = new RobocodeFileWriter(fileToWrite.getAbsolutePath(), true);
+            for (double data: table) {
+                fileWriter.write(" " + Double.toString(data) + "\r\n");
+            }
+            fileWriter.close();
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+    }
     public static void write(String[][] content, String out_name) throws IOException {
 
         File csvFile = new File(out_name += ".csv");
