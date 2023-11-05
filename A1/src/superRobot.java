@@ -39,7 +39,7 @@ public class superRobot extends AdvancedRobot {
     // hyperparameters
     private static double initial_random_rate = 0.35; //best 0.35
     private double random_rate = initial_random_rate;
-    public static double init_learning_rate = 0.6;
+    public static double init_learning_rate = 0.1; // original 0.6
     public static double learning_rate = init_learning_rate;
     public static double gamma = 0.5;
     // terminal rewards and intermediate rewards
@@ -66,10 +66,10 @@ public class superRobot extends AdvancedRobot {
     private static int input_size = 5;
     private static int num_neurons = 32;
     private static int num_layers = 2;
-    private static int dataset_size = 20;
+    private static int dataset_size = 1; // change to other values in 5e
     private static int output_size = 1;
     private static int epochs = 20;
-    private static double init_nn_lr = 0.6;
+    private static double init_nn_lr = 0.1; //initial 0.6
     private static double nn_lr = init_nn_lr;
     private static double nn_momentum = 0.9;
     private static String activation_func = "bipolar";
@@ -217,8 +217,8 @@ public class superRobot extends AdvancedRobot {
     public void onRoundEnded(RoundEndedEvent event){
         // decrease the learning rate and random rate by 2 for each period ( 1/5 rounds of tests)
         if (getRoundNum()% 1500 == 0 && getRoundNum() != 0){
-            learning_rate = learning_rate / 2;
-            nn_lr = nn_lr/2;
+            //learning_rate = learning_rate / 2;
+            //nn_lr = nn_lr/2;
             random_rate = random_rate / 2;
             System.out.println("rate change: " + Double.toString(learning_rate) + " " + Double.toString(random_rate));
         }
