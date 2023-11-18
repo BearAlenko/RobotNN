@@ -10,7 +10,7 @@ public class NeuralNet implements NeuralNetInterface{
     private int output_size = 1;
     private int num_layers = 2;
     private Layer[] layers;
-    private double learning_rate = 0.2;
+    public double learning_rate = 0.2;
     private double momentum = 0;
     private int a = -1;
     private int b = 1;

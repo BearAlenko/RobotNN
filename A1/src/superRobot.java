@@ -22,7 +22,7 @@ public class superRobot extends AdvancedRobot {
     public static ReplayMemory<StateActionInput> replay_memory = new ReplayMemory<StateActionInput>(replay_size);
 
     // warm up rounds to add initial replay memory for training later and see how the agent performs without learning
-    private int warm_up_rounds = 100;
+    private int warm_up_rounds = 200;
 
     // State-action pairs of previous and current
     private State pre_state = new State();
@@ -66,12 +66,12 @@ public class superRobot extends AdvancedRobot {
     private static int input_size = 5;
     private static int num_neurons = 32;
     private static int num_layers = 2;
-    private static int dataset_size = 1; // change to other values in 5e
+    private static int dataset_size = 10; // change to other values in 5e
     private static int output_size = 1;
-    private static int epochs = 20;
+    private static int epochs = 1;
     private static double init_nn_lr = 0.1; //initial 0.6
     private static double nn_lr = init_nn_lr;
-    private static double nn_momentum = 0.9;
+    private static double nn_momentum = 0.3;
     private static String activation_func = "bipolar";
     public static NeuralNet nn = new NeuralNet(input_size, num_neurons,
     output_size, num_layers, nn_lr, nn_momentum, -1, 1, activation_func, epochs, "test");
@@ -83,7 +83,7 @@ public class superRobot extends AdvancedRobot {
     private static int test_rounds = 100;
     private static int games_per_test = 100;
     private static double[] win_rate = new double[test_rounds];
-    private static double[] total_rewards = new double[test_rounds*games_per_test];
+    private static double[] total_rewards = new double[test_rounds];
     private static double[] error_log = new double[test_rounds];
     //private boolean new_battle = true;
 
@@ -147,7 +147,7 @@ public class superRobot extends AdvancedRobot {
 
                 turnRadarLeft(base_degree/4);
             }
-            total_rewards[getRoundNum()] += reward;
+            total_rewards[getRoundNum()/games_per_test] += reward;
             reset_reward();
         }
     }
@@ -185,7 +185,7 @@ public class superRobot extends AdvancedRobot {
     @Override
     public void onDeath(DeathEvent event) {
         update_value(lose_Reward);
-        total_rewards[getRoundNum()] += reward;
+        total_rewards[getRoundNum()/games_per_test] += reward;
         reset_reward();
     }
 
@@ -208,7 +208,7 @@ public class superRobot extends AdvancedRobot {
     public void onWin(WinEvent event) {
         update_value(win_Reward);
         win_rate[getRoundNum()/games_per_test]++;
-        total_rewards[getRoundNum()] += reward;
+        total_rewards[getRoundNum()/games_per_test] += reward;
         reset_reward();
 
     }
@@ -217,10 +217,16 @@ public class superRobot extends AdvancedRobot {
     public void onRoundEnded(RoundEndedEvent event){
         // decrease the learning rate and random rate by 2 for each period ( 1/5 rounds of tests)
         if (getRoundNum()% 1500 == 0 && getRoundNum() != 0){
-            //learning_rate = learning_rate / 2;
-            //nn_lr = nn_lr/2;
+            learning_rate = learning_rate / 2;
+            nn.learning_rate = nn.learning_rate/2;
             random_rate = random_rate / 2;
             System.out.println("rate change: " + Double.toString(learning_rate) + " " + Double.toString(random_rate));
+        }
+        if (getRoundNum() >= 0.8*test_rounds*games_per_test) {
+            random_rate = 0.0;
+            learning_rate = 0.0;
+            nn.learning_rate = 0.0;
+            System.out.println("test phase: " + Double.toString(learning_rate) + " " + Double.toString(random_rate));
         }
     }
 
@@ -236,19 +242,21 @@ public class superRobot extends AdvancedRobot {
         System.out.println(Double.toString(random_rate));
         String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date());
         File win_file = getDataFile("win_rate_nnlr_"+ String.valueOf(init_nn_lr) +"_gamma_" +
-                String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
+                String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_n_" + String.valueOf(dataset_size) + timeStamp+ ".csv");
         //File total_rewards_w = getDataFile("total_rewards.csv");
-        File error_file = getDataFile("error_nnlr_"+ String.valueOf(init_nn_lr) +"_gamma_" +
-                String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
+        //File error_file = getDataFile("error_nnlr_"+ String.valueOf(init_nn_lr) +"_gamma_" +
+        //        String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
+        File reward_file = getDataFile("reward_nnlr_"+ String.valueOf(init_nn_lr) +"_gamma_" +
+                String.valueOf(gamma) + "_e_" +String.valueOf(initial_random_rate)+"_n_" + String.valueOf(dataset_size) + timeStamp+ ".csv");
         try {
             writeCSV.save_data(win_file, win_rate);
-            writeCSV.save_data(error_file, error_log);
-            //writeCSV.save_data(total_rewards_w, total_rewards);
+            //writeCSV.save_data(error_file, error_log);
+            writeCSV.save_data(reward_file, total_rewards);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
         System.out.println("files saved to " + win_file.getAbsolutePath());
-        System.out.println("files saved to " + error_file.getAbsolutePath());
+        //System.out.println("files saved to " + error_file.getAbsolutePath());
 
         //to do: save weights
     }
@@ -372,7 +380,8 @@ public class superRobot extends AdvancedRobot {
         double random_number = Math.random();
         Action new_action;
         // if it is less than the random_rate, then explotrary walk. //test
-        if (random_number <= random_rate){
+        // if it is warming up, then no random
+        if (random_number <= random_rate && getRoundNum() >= warm_up_rounds){
             Random rand = new Random();
             new_action = Action.get_action(rand.nextInt(Action.action_length));
         }

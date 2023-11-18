@@ -119,15 +119,16 @@ public class main{
 
     static void train_nn_lut(double[][] inputs, double[][] outputs, int datasize){
         int input_size = 5;
-        int num_hiddens = 32;
+        int num_hiddens = 64;
         int output_size = 1;
         int num_layers = 2;
         double learning_rate = 0.1;
+        double momenum = 0.3;
         int a = -1;
         int b = 1;
 
         //Create models for tests...................
-        NeuralNet nn_bipolar_M = new NeuralNet(input_size,num_hiddens, output_size, num_layers, learning_rate, 0.9, a, b, "bipolar", epochs, "bipolar_M");
+        NeuralNet nn_bipolar_M = new NeuralNet(input_size,num_hiddens, output_size, num_layers, learning_rate, momenum, a, b, "bipolar", epochs, "bipolar_M");
         //Create models for tests...................
 
         //Training and evaluation..................

@@ -2,6 +2,7 @@ import robocode.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
@@ -52,14 +53,12 @@ public class myRobot extends AdvancedRobot {
     private double enemy_bearing = 0;
 
     // Statistics parameters
-    private static int test_rounds = 10;
+    private static int test_rounds = 100;
     private static int games_per_test = 100;
     private static double[] win_rate = new double[test_rounds];
-    private static int[] win_loss_table = new int[test_rounds*games_per_test];
-    private static double[] avg_error = new double[test_rounds];
-    private double accum_error = 0.0;
 
     private static writeCSV writing = new writeCSV(test_rounds);
+
     private boolean new_battle = true;
 
     private static double[] total_rewards = new double[test_rounds*games_per_test];
@@ -202,6 +201,11 @@ public class myRobot extends AdvancedRobot {
             random_rate = random_rate / 2;
             System.out.println("rate change: " + Double.toString(learning_rate) + " " + Double.toString(random_rate));
         }
+        if (getRoundNum() >= 0.8*test_rounds*games_per_test) {
+            random_rate = 0.0;
+            learning_rate = 0.0;
+            System.out.println("test phase: " + Double.toString(learning_rate) + " " + Double.toString(random_rate));
+        }
     }
 
     @Override
@@ -216,10 +220,11 @@ public class myRobot extends AdvancedRobot {
         String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date());
         File newfile = getDataFile("win_rate_onpolicy_"+ String.valueOf(on_off_policy) +"_terminalOnly_" +
                 String.valueOf(terminal_only) + "_e_" +String.valueOf(initial_random_rate)+"_" + timeStamp+ ".csv");
-        File total_rewards_w = getDataFile("total_rewards.csv");
+        //File total_rewards_w = getDataFile("total_rewards.csv");
+
         try {
             writeCSV.save_data(newfile, win_rate);
-            writeCSV.save_data(total_rewards_w, total_rewards);
+            //writeCSV.save_data(total_rewards_w, total_rewards);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -228,6 +233,7 @@ public class myRobot extends AdvancedRobot {
         //lut.save(getDataFile("lut_for_nn.txt")); // save lut
         new_battle = true;
     }
+
 
     // calculate the new state when scanned the enemy
     private void cal_state(ScannedRobotEvent e){
@@ -294,4 +300,5 @@ public class myRobot extends AdvancedRobot {
         } // else off policy
         else lut.set_value(pre_state, pre_actindex, off_value);
     }
+
 }

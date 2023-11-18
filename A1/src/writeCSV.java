@@ -21,6 +21,9 @@ public class writeCSV {
     public static void save_data(File file_name, double[] data) throws IOException {
         RobocodeFileOutputStream rfos= new RobocodeFileOutputStream(file_name);
         PrintStream out_stream = new PrintStream(rfos);
+        //for (double s_data: data) {
+        //    out_stream.println(Double.toString(s_data));
+        //}
         for (double s_data: data) {
             out_stream.format(Double.toString(s_data) + "\n");
         }
